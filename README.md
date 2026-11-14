@@ -578,7 +578,7 @@ to normal, since the saved pixels are already upright.
 video appended, as Pixel and Samsung cameras save them):
 
 ```kotlin
-val bytes = resolver.openInputStream(uri)!!.use { it.readBytes() }
+val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return
 val parts = MotionPhoto.read(bytes)              // null: not a Motion Photo
 if (parts != null) {
     val video = File(cacheDir, "motion.mp4")
@@ -608,10 +608,10 @@ Get suggestions for the video's first frame, leaving out what video can't use
 (sharpening and noise reduction would shimmer from frame to frame):
 
 ```kotlin
-val frame = MediaMetadataRetriever().run {
-    setDataSource(context, uri)
-    getFrameAtTime(0).also { release() }
-}!!
+val frame = MediaMetadataRetriever().use {
+    it.setDataSource(context, uri)
+    it.getFrameAtTime(0)
+} ?: return                                      // null: no frame to read
 val result = PhotoEditKit.suggestions(
     context, frame,
     movieFrame = true,
