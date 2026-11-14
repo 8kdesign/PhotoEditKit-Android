@@ -49,8 +49,10 @@ result.suggestions.firstOrNull()?.let { best ->
   adjustments.
 - **Framing.** Straighten, crop to a ratio, quarter turns and flips, with the
   vignette drawn on the final frame.
-- **Fast slider previews.** Render into a reused bitmap, or draw the edit on
-  the GPU from a 3D colour table.
+- **A ready-made preview.** `EditPreviewView` shows a photo with its edit:
+  it opens large photos at screen size, renders in the background, and on
+  Android 13 and later draws slider moves on the GPU in a few milliseconds.
+  [Showing an edit](#showing-an-edit-editpreviewview).
 - **Ultra HDR.** Saves keep the photo's HDR gain map (Android 14 and later).
 - **Motion Photos.** Reads Google Motion Photos and writes them back with the
   same edit on the video.
@@ -72,10 +74,11 @@ result.suggestions.firstOrNull()?.let { best ->
 - [Quick start: let the AI edit a photo](#quick-start-let-the-ai-edit-a-photo)
 - [Edits: `EditConfig`](#edits-editconfig)
 - [Rendering an edit](#rendering-an-edit)
+- [Showing an edit: `EditPreviewView`](#showing-an-edit-editpreviewview)
 - [AI suggestions](#ai-suggestions)
 - [The recipes](#the-recipes)
 - [Framing: straighten, crop, turn](#framing-straighten-crop-turn)
-- [Previews while a slider moves](#previews-while-a-slider-moves)
+- [Building your own preview](#building-your-own-preview)
 - [Saving with Ultra HDR](#saving-with-ultra-hdr)
 - [Motion Photos](#motion-photos)
 - [Editing videos](#editing-videos)
@@ -108,9 +111,10 @@ sequenceDiagram
     Note left of K: ranks the looks, using what this<br>user picked on similar photos
     K-->>-UI: SuggestionResult: up to ten looks<br>with titles, EditConfig and thumbnails
 
+    UI->>K: EditPreviewView.setImage(bitmap)
     loop Every edit
-        UI->>K: renderedEdit(preview, config, renderScale, framing, into)
-        K-->>UI: the edited preview bitmap
+        UI->>K: view.config = config, view.framing = framing
+        Note left of K: draws the change on the GPU,<br>then renders it sharp
     end
 
     UI->>+K: renderedEdit(fullBitmap, config, framing = framing, keepsHdr = true)
@@ -122,7 +126,7 @@ sequenceDiagram
 | Your app provides | PhotoEditKit delivers |
 |---|---|
 | The photo as an upright `Bitmap`, and its `ExifInterface` | AI scene/tone analysis and ranked [suggestions](#ai-suggestions) with localized titles and thumbnails |
-| The editing UI: look picker, sliders, crop controls, undo/redo | [`EditConfig`](#edits-editconfig) values for every slider, [`Framing`](#framing-straighten-crop-turn) geometry, and [renders](#rendering-an-edit) for previews and export |
+| The editing UI: look picker, sliders, crop controls, undo/redo | [`EditConfig`](#edits-editconfig) values for every slider, [`Framing`](#framing-straighten-crop-turn) geometry, a [preview view](#showing-an-edit-editpreviewview) and [renders](#rendering-an-edit) for export |
 | Saving: JPEG encoding, EXIF, MediaStore, sharing | [Ultra HDR gain maps](#saving-with-ultra-hdr), [Motion Photo](#motion-photos) writing, [video export](#editing-videos) and [preference learning](#learning-from-saves) |
 
 ## Examples
@@ -188,7 +192,7 @@ hosted in this GitHub repository.
 
    ```kotlin
    dependencies {
-       implementation("com.logicui:photoeditkit:1.0.0")
+       implementation("com.logicui:photoeditkit:1.0.1")
    }
    ```
 
@@ -325,6 +329,75 @@ Apple M2 Mac: a 12 MP tone edit takes about 0.4 s, and noise reduction adds
 
 Wide-gamut (Display P3) bitmaps are converted to sRGB before rendering, so the
 output is sRGB.
+
+## Showing an edit: `EditPreviewView`
+
+`EditPreviewView` is an Android `View` that shows a photo with an edit and
+keeps up with a slider. Set the photo once, then set the edit whenever it
+changes:
+
+```kotlin
+val preview = EditPreviewView(context).apply { cornerRadius = 24f }
+
+preview.setImage(uri)            // or setImage(bitmap)
+preview.config = suggestion.config
+preview.framing = framing        // optional
+preview.showsOriginal = true     // while the user holds to compare
+```
+
+While a slider is held, set `isAdjusting`, and clear it when the finger lifts:
+
+```kotlin
+fun onExposureMoved(value: Float) {
+    preview.isAdjusting = true
+    preview.config = EditConfig(config.properties + (EditSettingType.EXPOSURE to value))
+}
+
+fun onExposureReleased() {
+    preview.isAdjusting = false
+}
+```
+
+What it does to stay fast:
+
+- **Loads only what it shows.** `setImage(uri)` decodes the photo straight to
+  screen size (at most `maxPreviewSize`, 2048 px by default, on the long
+  side). `setImage(bitmap)` scales a full-size bitmap down once. Pass the
+  bitmap at the size you'll save, so sharpening and noise reduction look the
+  same on screen as in the saved photo.
+- **Shows something at once.** The unedited photo appears first, then a quick
+  half-size render, then the sharp one.
+- **Draws slider moves on the GPU** on Android 13 and later: the colour change
+  is drawn over the last sharp render in a few milliseconds, with no render.
+  Noise reduction, sharpening and vignette changes, and every change on
+  Android 10–12, show as half-size renders until the finger lifts.
+- **Renders one edit at a time, always the newest**, in the background, and
+  reuses the output bitmaps.
+
+The photo is drawn whole and centred, with rounded corners from
+`cornerRadius`. With `wrap_content` the view takes the photo's shape.
+`onLoadFailed` reports a Uri that can't be decoded. Call it from the main
+thread.
+
+The view keeps no saved state. After a configuration change, set the photo
+and edit on the new view again. In Jetpack Compose, wrap it in `AndroidView`:
+
+```kotlin
+AndroidView(
+    factory = { EditPreviewView(it) },
+    update = { view ->
+        view.setImage(photo)           // the same bitmap again does nothing
+        view.config = config
+        view.framing = framing
+        view.isAdjusting = isDragging
+        view.showsOriginal = isComparing
+    },
+    modifier = Modifier.fillMaxSize(),
+)
+```
+
+For export, render the full-size photo with `renderedEdit`. The view's
+bitmaps are screen-sized.
 
 ## AI suggestions
 
@@ -533,7 +606,10 @@ val framedOnly = PhotoEditKit.framedImage(photo, framing)      // no colour edit
 - `AspectRatio` lists the crop shapes (Original, Free, 21:9 … 9:21), each with
   a `titleKey`; `turned` gives the same ratio the other way round.
 
-## Previews while a slider moves
+## Building your own preview
+
+`EditPreviewView` is built from public functions, so you can draw the edit
+some other way, for example in your own OpenGL or Compose canvas:
 
 - **Render small.** Render a screen-sized copy of the photo with
   `renderScale` set to its size over the photo's.
@@ -544,10 +620,8 @@ val framedOnly = PhotoEditKit.framedImage(photo, framing)      // no colour edit
   colour as a 33 × 33 × 33 lookup table in a 33 × 1089 bitmap (x = blue,
   y = red × 33 + green; interpolate between grid points). It holds every step
   but noise reduction, sharpening and the vignette, and takes a few
-  milliseconds. On Android 13 and later you can apply it with an AGSL
-  `RuntimeShader` while the finger moves, then show a full render when it
-  lifts. A good way to keep the render's noise reduction, sharpening and
-  vignette during a drag is to draw
+  milliseconds. To keep the last render's noise reduction, sharpening and
+  vignette while a slider moves, draw
   `last full render + table(new)(source) − table(old)(source)`.
 
 ## Saving with Ultra HDR
@@ -714,6 +788,8 @@ SDR, in the preview and the export.
 - `renderedEdit`, `framedImage`, `colorTable`, `prepare` and `VideoLook.config`
   block while they work. Call them off the main thread (for example in
   `withContext(Dispatchers.Default)`).
+- `EditPreviewView` is set from the main thread and renders in the
+  background.
 - `VideoEdit` changes its state on the main thread and does its work in the
   background. `exportVideo` reports progress on the main thread.
 
