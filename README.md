@@ -35,8 +35,9 @@ result.suggestions.firstOrNull()?.let { best ->
   leads with **Original** when no look improves the photo.
 - **Targeted corrections and styles.** Corrective recipes (Brighten, Lift
   Shadows, Recover Highlights, Warm Up, Cool Down, True Color, Clean Up) resolve
-  exposure, cast, and noise flaws. Stylistic recipes (Vivid, Punch, Matte,
-  Muted, Soft) apply looks calibrated to each photo.
+  exposure, cast, and noise flaws. Stylistic recipes (Vivid, Punch, Muted,
+  Soft) apply looks calibrated to each photo, and opt-in themes (Manga, B&W,
+  Film, Matte) restyle it.
   [See all recipes](#the-recipes).
 - **Skin tone preservation.** Safeguards facial skin hue and saturation across
   all recipes, keeping skin tones natural even under strong colour moves.
@@ -192,7 +193,7 @@ hosted in this GitHub repository.
 
    ```kotlin
    dependencies {
-       implementation("com.logicui:photoeditkit:1.0.2")
+       implementation("com.logicui:photoeditkit:1.0.3")
    }
    ```
 
@@ -420,7 +421,7 @@ already well-balanced. Optional parameters:
 - **`offerOriginal = true`** puts an **Original** suggestion (no edit,
   `look == null`) first whenever no look improves on the photo as it is.
 - **`includeThemes = true`** appends stylized [themes](#themes) that suit the
-  photo (Manga, B&W, Film) after the regular looks, outside the count limit,
+  photo (Manga, B&W, Film, Matte) after the regular looks, outside the count limit,
   with `isTheme` set. Themes never change which other looks are offered or
   their order.
 - **`disabledLooks`** a set of `AILook` values (such as
@@ -545,8 +546,7 @@ balanced colour gets neither.
 | Pop | Brighter and punchier at once, for a light-coloured subject in a dim room, such as a glass of juice under a lamp. The subject's own colours are lifted further than the rest of the photo. Not offered on photos with a lot of white. |
 | Vivid | Richer, more saturated colour, led by the colours the photo is about. Uses vibrance for much of it, so muted colours gain the most while skin and colours that are already strong are left nearly as they were; on photos of people it uses vibrance alone. Deepens a daylight blue sky rather than oversaturating it, and turns the yellowish greens of sunlit leaves toward true green. |
 | Muted | Quieter colour overall, while the main subject keeps its own. Takes out more colour the more colourful the photo is. |
-| Matte | A faded, film-print style: softened blacks, gentler colour and a light vignette. Fades more on a contrasty photo, less on a flat one. |
-| Soft | A gentle, warm finish with low contrast. |
+| Soft | A gentle finish: low contrast and open shadows. Leaves colour alone. |
 | Spotlight | Darkens the edges to draw the eye to the middle of the photo. Leaves colour alone. |
 
 ### Themes
@@ -559,6 +559,7 @@ offered with `includeThemes = true`, always after the corrections and styles.
 | Manga | A hand-painted anime look: bright, open shadows, soft highlights, light cyan anime skies and clean leaf greens, and fine detail flattened into painted patches (negative `SHARPNESS`). City, nature and sky photos in daylight only, not sunsets or night. |
 | B&W | Black and white, with contrast, highlights and shadows set for the photo; a warm sunset sky is darkened as a blue filter does on film, through the colour mixer's luminance. Only offered on photos with strong contrast, or a city lit up at night. |
 | Film | A print from colour negative film: muted colour (greens turned toward olive, blues toward teal), strong contrast that follows the photo's own light, highlights rolled off, a little warmth and green tint, and a very subtle vignette. Eases off on faces and on a subject that is already dark. Not offered on night or dark photos. |
+| Matte | A faded print: softened blacks, gentler colour and a light vignette. Fades more on a contrasty photo, less on a flat one, and lifts deep blacks less. Not offered at night or in a dim room, on a photo with a strong warm cast, or on food. |
 
 ### Every recipe
 
