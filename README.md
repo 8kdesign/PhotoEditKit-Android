@@ -193,7 +193,7 @@ hosted in this GitHub repository.
 
    ```kotlin
    dependencies {
-       implementation("com.logicui:photoeditkit:1.0.3")
+       implementation("com.logicui:photoeditkit:1.0.4")
    }
    ```
 
@@ -268,6 +268,7 @@ changes. `isNoChange` is true when every value is 0.
 | `EXPOSURE` | −0.5 … 0.5 | |
 | `BRIGHTNESS` | −0.5 … 0.5 | adjusts midtones while anchoring black and white |
 | `CONTRAST` | −0.5 … 0.5 | |
+| `BLACK_POINT` | −1 … 1 | positive takes milky blacks to black and keeps the highlights; negative lifts black to a faded grey |
 | `SHADOW` | −1 … 1 | positive values lift shadow detail |
 | `HIGHLIGHT` | −1 … 0 | negative values recover bright detail |
 | `SATURATION` | −1 … 1 | |
