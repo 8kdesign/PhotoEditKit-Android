@@ -195,7 +195,7 @@ hosted in this GitHub repository.
 
    ```kotlin
    dependencies {
-       implementation("com.logicui:photoeditkit:1.0.4")
+       implementation("com.logicui:photoeditkit:1.2.7")
    }
    ```
 
