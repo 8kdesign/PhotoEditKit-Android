@@ -39,7 +39,7 @@ result.suggestions.firstOrNull()?.let { best ->
   Shadows, Recover Highlights, Warm Up, Cool Down, True Color, Clean Up) resolve
   exposure, cast, and noise flaws. Stylistic recipes (Vivid, Punch, Muted,
   Soft) apply looks calibrated to each photo, and opt-in themes (Manga, B&W,
-  Film, Matte) restyle it.
+  Film, Matte, Digicam) restyle it.
   [See all recipes](#the-recipes).
 - **Skin tone preservation.** Safeguards facial skin hue and saturation across
   all recipes, keeping skin tones natural even under strong colour moves.
@@ -195,7 +195,7 @@ hosted in this GitHub repository.
 
    ```kotlin
    dependencies {
-       implementation("com.logicui:photoeditkit:1.2.8")
+       implementation("com.logicui:photoeditkit:1.2.9")
    }
    ```
 
@@ -272,14 +272,16 @@ changes. `isNoChange` is true when every value is 0.
 | `CONTRAST` | −0.5 … 0.5 | |
 | `BLACK_POINT` | −1 … 1 | positive takes milky blacks to black and keeps the highlights; negative lifts black to a faded grey |
 | `SHADOW` | −1 … 1 | positive values lift shadow detail |
-| `HIGHLIGHT` | −1 … 0 | negative values recover bright detail |
+| `HIGHLIGHT` | −1 … 1 | negative values recover bright detail; positive values push highlights up and clip them hard at white, one colour channel at a time, like an old camera sensor (a sky turns cyan before white) |
 | `SATURATION` | −1 … 1 | |
 | `VIBRANCE` | −1 … 1 | boosts muted colours while protecting skin tones, neutral greys, and already-vivid hues |
 | `TEMPERATURE` | −1 … 1 | positive is warmer, negative cooler |
 | `TINT` | −1 … 1 | positive is more magenta, negative greener |
 | `SHADOW_WARMTH` | −1 … 1 | warms or cools shadows and midtones while leaving highlights alone |
 | `SHARPNESS` | −1 … 1 | positive sharpens; negative applies painterly smoothing |
+| `LOFI` | 0 … 1 | "Lo-Fi": the softness of an old low-resolution camera: the whole photo resolves at a fixed size whatever its own, from 6,000 px on the long edge as the slider leaves 0 down to 480 px (VGA) at 1; about 800 px (0.5 MP) at 0.8. The small frame also goes through a JPEG save with iOS's own quantisation tables (quality 0.9 down to 0.4 at 1), so its blocks, ringing and colour bleeding are enlarged with it. Sized to the frame, so previews and saves match, and a render already smaller than that is left as it is |
 | `NOISE_REDUCTION` | 0 … 1 | |
+| `NOISE` | 0 … 1 | adds an old small sensor's noise: fine speckle and coarser colour blotches, mostly in the shadows. The same size and strength as on iOS, in a different random pattern |
 | `VIGNETTE` | −1 … 1 | |
 | `BOOST_RED` `BOOST_ORANGE` `BOOST_YELLOW` `BOOST_GREEN` `BOOST_CYAN` `BOOST_BLUE` `BOOST_PURPLE` `BOOST_MAGENTA` | −1 … 1 | colour mixer: saturation of one colour band |
 | `HUE_RED` … `HUE_MAGENTA` (same eight bands) | −1 … 1 | colour mixer: shifts hue toward the neighbouring band (positive goes red toward orange, blue toward purple) |
@@ -424,7 +426,7 @@ already well-balanced. Optional parameters:
 - **`offerOriginal = true`** puts an **Original** suggestion (no edit,
   `look == null`) first whenever no look improves on the photo as it is.
 - **`includeThemes = true`** appends stylized [themes](#themes) that suit the
-  photo (Manga, B&W, Film, Matte) after the regular looks, outside the count limit,
+  photo (Manga, B&W, Film, Matte, Digicam) after the regular looks, outside the count limit,
   with `isTheme` set. Themes never change which other looks are offered or
   their order.
 - **`disabledLooks`** a set of `AILook` values (such as
@@ -563,6 +565,7 @@ offered with `includeThemes = true`, always after the corrections and styles.
 | B&W | Black and white, with contrast, highlights and shadows set for the photo; a warm sunset sky is darkened as a blue filter does on film, through the colour mixer's luminance. Only offered on photos with strong contrast, or a city lit up at night. |
 | Film | A print from colour negative film: muted colour (greens turned toward olive, blues toward teal), strong contrast that follows the photo's own light, highlights rolled off, a little warmth and green tint, and a very subtle vignette. Eases off on faces and on a subject that is already dark. Not offered on night or dark photos. |
 | Matte | A faded print: softened blacks, gentler colour and a light vignette. Fades more on a contrasty photo, less on a flat one, and lifts deep blacks less. Not offered at night or in a dim room, on a photo with a strong warm cast, or on food. |
+| Digicam | An early-2000s point-and-shoot: overexposed, more on brighter photos up to a point (at most about +0.2 exposure, and none on photos already bright), with highlights clipped hard to white the way a small sensor clipped them (`HIGHLIGHT` +0.5), so a sky turns cyan and skin yellowish on the way to white, flat midtones with greyish, muddy blacks, a cool blue-cyan cast (coolest in the shade), thin colour apart from cyan-blue skies, a low-resolution softness (`LOFI`) with fine detail lightly smeared (slightly negative `SHARPNESS`), colour sensor noise (`NOISE`), more on dim photos, and a light vignette on bright photos or a dark one on dark photos. Blacks are always lifted to a grey, most on dark and night photos, eased only on dark skin. Offered on any photo, dark and night ones included, but not for videos. |
 
 ### Every recipe
 
@@ -683,7 +686,9 @@ you use it: `@OptIn(UnstableApi::class)`.
 ### 1. Suggest a look
 
 Get suggestions for the video's first frame, leaving out what video can't use
-(sharpening and noise reduction would shimmer from frame to frame):
+(sharpening and noise reduction would shimmer from frame to frame, added noise
+would sit still over the moving picture, and Lo-Fi works across pixels, which the
+video's colour table can't hold; Digicam, an old stills camera's look, isn't offered):
 
 ```kotlin
 val frame = MediaMetadataRetriever().use {

@@ -1,0 +1,174 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.logicui",
+    "module": "photoeditkit",
+    "version": "1.2.9",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.9.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.exifinterface",
+          "module": "exifinterface",
+          "version": {
+            "requires": "1.4.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-android",
+          "version": {
+            "requires": "1.11.0"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-common",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-exoplayer",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-effect",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-transformer",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "photoeditkit-1.2.9.aar",
+          "url": "photoeditkit-1.2.9.aar",
+          "size": 16189681,
+          "sha512": "130fccdf83dc51a178a7dde20e6dd6e1c5af783c8bdd9ac0a2c81144a18deb831505987bf5ab8523768ce83adbb6f8f878d23b8b55f463517d259166ae1bd6c5",
+          "sha256": "6fbaa61f43d2686cc33074cbea93758570379aaa7318f078380f6e07217a93eb",
+          "sha1": "96e5ed6f5dfaf40d8c7037ad9ffca2f66c45f427",
+          "md5": "406e43be3f9f6aac967b0fbe73472c94"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.core",
+          "module": "core-ktx",
+          "version": {
+            "requires": "1.18.0"
+          }
+        },
+        {
+          "group": "com.google.ai.edge.litert",
+          "module": "litert",
+          "version": {
+            "requires": "2.3.2"
+          }
+        },
+        {
+          "group": "androidx.exifinterface",
+          "module": "exifinterface",
+          "version": {
+            "requires": "1.4.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-android",
+          "version": {
+            "requires": "1.11.0"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-common",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-exoplayer",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-effect",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "androidx.media3",
+          "module": "media3-transformer",
+          "version": {
+            "requires": "1.11.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "photoeditkit-1.2.9.aar",
+          "url": "photoeditkit-1.2.9.aar",
+          "size": 16189681,
+          "sha512": "130fccdf83dc51a178a7dde20e6dd6e1c5af783c8bdd9ac0a2c81144a18deb831505987bf5ab8523768ce83adbb6f8f878d23b8b55f463517d259166ae1bd6c5",
+          "sha256": "6fbaa61f43d2686cc33074cbea93758570379aaa7318f078380f6e07217a93eb",
+          "sha1": "96e5ed6f5dfaf40d8c7037ad9ffca2f66c45f427",
+          "md5": "406e43be3f9f6aac967b0fbe73472c94"
+        }
+      ]
+    }
+  ]
+}
